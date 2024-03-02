@@ -1,33 +1,59 @@
-// We require the Hardhat Runtime Environment explicitly here. This is optional
-// but useful for running the script in a standalone fashion through `node <script>`.
-//
-// You can also run a script with `npx hardhat run <script>`. If you do that, Hardhat
-// will compile your contracts, add the Hardhat Runtime Environment's members to the
-// global scope, and execute the script.
 const hre = require("hardhat");
+require('dotenv').config()
+
+const TERMINUSDID_ADDR = process.env.TERMINUSDID_ADDR;
+const ethers = hre.ethers;
 
 async function main() {
-  const currentTimestampInSeconds = Math.round(Date.now() / 1000);
-  const unlockTime = currentTimestampInSeconds + 60;
 
-  const lockedAmount = hre.ethers.parseEther("0.001");
+    const tagTypeDomain = "otmoic.reputation";
+    const tagName = "complaints";
+    const [operator] = await ethers.getSigners();
+    const operatorAddr = operator.address;
+    const terminusDID = await ethers.getContractAt("ITerminusDID", TERMINUSDID_ADDR, operator)
 
-  const lock = await hre.ethers.deployContract("Lock", [unlockTime], {
-    value: lockedAmount,
-  });
 
-  await lock.waitForDeployment();
+    const hasDomain = await terminusDID.isRegistered(tagTypeDomain);
+    if (!hasDomain) {
+        // register domain
+        const topLevelDomain = tagTypeDomain.split(".")[1];
+        const registerTopDomain = terminusDID.interface.encodeFunctionData("register", [operatorAddr, {
+            domain: topLevelDomain,
+            did: "did",
+            notes: "local fork test for Reputation contract",
+            allowSubdomain: true
+        }]);
+        const registerDomain = terminusDID.interface.encodeFunctionData("register", [operatorAddr, {
+            domain: tagTypeDomain,
+            did: "did",
+            notes: "local fork test for Reputation contract",
+            allowSubdomain: true
+        }]);
+        await terminusDID.connect(operator).multicall([registerTopDomain, registerDomain]);
+        console.log(`register domain done: ${tagTypeDomain}`);
 
-  console.log(
-    `Lock with ${ethers.formatEther(
-      lockedAmount
-    )}ETH and unlock timestamp ${unlockTime} deployed to ${lock.target}`
-  );
+        // deploy reputation contract
+        const reputation = await ethers.deployContract("Reputation", [TERMINUSDID_ADDR, tagTypeDomain, tagName]);
+        await reputation.waitForDeployment();
+        const reputationAddr = await reputation.getAddress();
+        console.log(`deployed Reputation contract: ${reputationAddr}`);
+
+        // define tag type
+        const bytes32ArrayType = ethers.getBytes("0x040820"); // // bytes32 array
+        await terminusDID.defineTag(tagTypeDomain, tagName, bytes32ArrayType, []);
+        console.log(`defined tag type bytes32[] on domain ${tagTypeDomain} with name ${tagName}`);
+
+        // specify tagger as reputation contract for tag type
+        await terminusDID.setTagger(tagTypeDomain, tagName, reputationAddr);
+        console.log(`specify tagger ${reputationAddr} for above tagType`)
+    } else {
+        console.log(`already register domain: ${tagTypeDomain} and tag ${tagName}`);
+    }
 }
 
 // We recommend this pattern to be able to use async/await everywhere
 // and properly handle errors.
 main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
+    console.error(error);
+    process.exitCode = 1;
 });
