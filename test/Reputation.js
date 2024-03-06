@@ -133,10 +133,35 @@ describe("Reputation", function () {
                 allowSubdomain: true
             })
 
-            await reputation.submitComplaint(complain, sig, "reputationTestUser");
+            await expect(reputation.submitComplaint(complain, sig, "reputationTestUser"))
+                .to.emit(reputation, "SubmitComplaint")
+                .withArgs(bidId);
 
             let exists = await reputation.hasComplaint(bidId);
             expect(exists).to.be.true;
+        });
+
+        it("avoid replay attack", async function () {
+            const { reputation, complain, eip712Domain, bidType, owner, terminusDID } = await loadFixture(setep);
+            let bidId = makeBidId(makeBidIdOrigin(complain));
+            let bid = {
+                id: bidId
+            }
+            let sig = await owner.signTypedData(eip712Domain, bidType, bid);
+            
+            // to be a qualified address to submit complaint, the address should own a domain
+            await terminusDID.register(owner.address, {
+                domain: "reputationTestUser",
+                did: "did",
+                notes: "local fork test for Reputation contract",
+                allowSubdomain: true
+            })
+
+            await reputation.submitComplaint(complain, sig, "reputationTestUser");
+            await expect(reputation.submitComplaint(complain, sig, "reputationTestUser"))
+                .to.be.revertedWithCustomError(reputation, "DuplicateBidId")
+                .withArgs(bidId);
+
         });
 
         it("sign bid with address outside terminus domain", async function () {

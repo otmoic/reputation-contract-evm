@@ -12,6 +12,7 @@ contract Reputation is SignatureHelper {
 
     event SubmitComplaint(bytes32 bidId);
     
+    error DuplicateBidId(bytes32 bidId);
     error InvalidSigner(address signer, address owner);
     error ComplaintTagNoExists();
     error DomainNoExists();
@@ -33,6 +34,8 @@ contract Reputation is SignatureHelper {
         string lpSign;
     }
 
+    mapping(bytes32 bidId => bool exists) private submittedBidId;
+
     constructor(address _terminusDID, string memory _tagTypeDomain, string memory _tagName) {
         terminusDID = ITerminusDID(_terminusDID);
         tagTypeDomain = _tagTypeDomain;
@@ -40,8 +43,14 @@ contract Reputation is SignatureHelper {
     }
 
     function submitComplaint(Complaint calldata _complaint, bytes calldata _sig, string calldata _domain) external {
-        // verify complaint data and signature address
         bytes32 id = getBidId(_complaint);
+        
+        // check bid id has submitted or not
+        if (submittedBidId[id]) {
+            revert DuplicateBidId(id);
+        }
+
+        // verify complaint data and signature address
         address signer = recoverSigner(Bid(id), _sig);
         bool exists = terminusDID.isRegistered(_domain);
         if (!exists) {
@@ -64,23 +73,14 @@ contract Reputation is SignatureHelper {
             complaints[0] = id;
             terminusDID.addTag(tagTypeDomain, tagTypeDomain, tagName, abi.encode(complaints));
         }
+    
+        submittedBidId[id] = true;
 
         emit SubmitComplaint(id);
     }
 
     function hasComplaint(bytes32 _bidId) external view returns (bool) {
-        if (!terminusDID.hasTag(tagTypeDomain, tagTypeDomain, tagName)) {
-            revert ComplaintTagNoExists();
-        }
-        uint256[] memory elemPath;
-        bytes memory gotData = terminusDID.getTagElem(tagTypeDomain, tagTypeDomain, tagName, elemPath);
-        bytes32[] memory bidIds = abi.decode(gotData, (bytes32[]));
-        for (uint256 i = 0; i < bidIds.length; ++i) {
-            if (_bidId == bidIds[i]) {
-                return true;
-            }
-        }
-        return false;
+        return submittedBidId[_bidId];
     }
 
     function getBidId(Complaint calldata _complaint) public pure returns (bytes32) {
