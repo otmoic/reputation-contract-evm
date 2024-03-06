@@ -158,7 +158,8 @@ describe("Reputation", function () {
 });
 
 function makeBidIdOrigin(complain) {
-    return complain.srcChainId.toString() +
+    return complain.agreementReachedTime.toString() + 
+        complain.srcChainId.toString() +
         toBigInt(complain.srcAddress).toString() +
         complain.srcToken +
         complain.dstChainId.toString() +
@@ -169,7 +170,6 @@ function makeBidIdOrigin(complain) {
         complain.dstNativeAmount +
         complain.lpId +
         complain.stepTimeLock.toString() +
-        complain.agreementReachedTime.toString() +
         complain.userSign +
         complain.lpSign;
 }

@@ -84,20 +84,23 @@ contract Reputation is SignatureHelper {
     }
 
     function getBidId(Complaint calldata _complaint) public pure returns (bytes32) {
-        string memory tmp = Strings.toString(_complaint.srcChainId);
-        tmp = string.concat(tmp, Strings.toString(_complaint.srcAddress));
-        tmp = string.concat(tmp, _complaint.srcToken);
-        tmp = string.concat(tmp, Strings.toString(_complaint.dstChainId));
-        tmp = string.concat(tmp, Strings.toString(_complaint.dstAddress));
-        tmp = string.concat(tmp, _complaint.dstToken);
-        tmp = string.concat(tmp, _complaint.srcAmount);
-        tmp = string.concat(tmp, _complaint.dstAmount);
-        tmp = string.concat(tmp, _complaint.dstNativeAmount);
-        tmp = string.concat(tmp, _complaint.lpId);
-        tmp = string.concat(tmp, Strings.toString(_complaint.stepTimeLock));
-        tmp = string.concat(tmp, Strings.toString(_complaint.agreementReachedTime));
-        tmp = string.concat(tmp, _complaint.userSign);
-        tmp = string.concat(tmp, _complaint.lpSign);
+        string memory tmp = Strings.toString(_complaint.agreementReachedTime);
+        tmp = string.concat(tmp,
+            Strings.toString(_complaint.srcChainId),
+            Strings.toString(_complaint.srcAddress),
+            _complaint.srcToken,
+            Strings.toString(_complaint.dstChainId),
+            Strings.toString(_complaint.dstAddress),
+            _complaint.dstToken);           
+        tmp = string.concat(tmp,
+            _complaint.srcAmount,
+            _complaint.dstAmount,
+            _complaint.dstNativeAmount);
+        tmp = string.concat(tmp,
+            _complaint.lpId,
+            Strings.toString(_complaint.stepTimeLock),
+            _complaint.userSign,
+            _complaint.lpSign);
         return keccak256(bytes(tmp));
     }
 
