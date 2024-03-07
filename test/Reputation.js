@@ -11,7 +11,7 @@ describe("Reputation", function () {
     async function setep() {
 
         // make test data
-        const complain = {
+        const complaint = {
             srcChainId: 1,
             srcAddress: "0x945e9704D2735b420363071bB935ACf2B9C4b814",
             srcToken: "0xdac17f958d2ee523a2206206994597c13d831ec7",
@@ -48,9 +48,22 @@ describe("Reputation", function () {
         };
 
         // eip712 signature message type
-        const bidType = {
-            Bid: [
-                { name: 'id', type: 'bytes32' }
+        const complaintType = {
+            Complaint: [
+                { name: 'srcChainId', type: 'uint64' },
+                { name: 'srcAddress', type: 'uint256' },
+                { name: 'srcToken', type: 'string' },
+                { name: 'dstChainId', type: 'uint64' },
+                { name: 'dstAddress', type: 'uint256' },
+                { name: 'dstToken', type: 'string' },
+                { name: 'srcAmount', type: 'string' },
+                { name: 'dstAmount', type: 'string' },
+                { name: 'dstNativeAmount', type: 'string' },
+                { name: 'lpId', type: 'string' },
+                { name: 'stepTimeLock', type: 'uint64' },
+                { name: 'agreementReachedTime', type: 'uint64' },
+                { name: 'userSign', type: 'string' },
+                { name: 'lpSign', type: 'string' },
             ]
         }
 
@@ -94,7 +107,7 @@ describe("Reputation", function () {
             console.log(`already register domain: ${tagTypeDomain} and tag ${tagName}`);
         }
 
-        return { reputation, terminusDIDAddr, terminusDID, tagTypeDomain, tagName, owner, complain, eip712Domain, bidType };
+        return { reputation, terminusDIDAddr, terminusDID, tagTypeDomain, tagName, owner, complaint, eip712Domain, complaintType };
     }
 
     describe("basis check", function () {
@@ -108,22 +121,19 @@ describe("Reputation", function () {
 
     describe("bid id check", function () {
         it("bid id offchain and onchain should be the same", async function () {
-            const { reputation, complain } = await loadFixture(setep);
-            let bidIdOrigin = makeBidIdOrigin(complain);
+            const { reputation, complaint } = await loadFixture(setep);
+            let bidIdOrigin = makeBidIdOrigin(complaint);
             let bidId = makeBidId(bidIdOrigin);
-            let bidIdOnChain = await reputation.getBidId(complain);
+            let bidIdOnChain = await reputation.getBidId(complaint);
             expect(bidId).to.equal(bidIdOnChain);
         });
     });
 
     describe("signature check", function () {
         it("sign bid with my address", async function () {
-            const { reputation, complain, eip712Domain, bidType, owner, terminusDID } = await loadFixture(setep);
-            let bidId = makeBidId(makeBidIdOrigin(complain));
-            let bid = {
-                id: bidId
-            }
-            let sig = await owner.signTypedData(eip712Domain, bidType, bid);
+            const { reputation, complaint, eip712Domain, complaintType, owner, terminusDID } = await loadFixture(setep);
+            let bidId = makeBidId(makeBidIdOrigin(complaint));
+            let sig = await owner.signTypedData(eip712Domain, complaintType, complaint);
             
             // to be a qualified address to submit complaint, the address should own a domain
             await terminusDID.register(owner.address, {
@@ -133,7 +143,7 @@ describe("Reputation", function () {
                 allowSubdomain: true
             })
 
-            await expect(reputation.submitComplaint(complain, sig, "reputationTestUser"))
+            await expect(reputation.submitComplaint(complaint, sig, "reputationTestUser"))
                 .to.emit(reputation, "SubmitComplaint")
                 .withArgs(bidId);
 
@@ -142,12 +152,9 @@ describe("Reputation", function () {
         });
 
         it("avoid replay attack", async function () {
-            const { reputation, complain, eip712Domain, bidType, owner, terminusDID } = await loadFixture(setep);
-            let bidId = makeBidId(makeBidIdOrigin(complain));
-            let bid = {
-                id: bidId
-            }
-            let sig = await owner.signTypedData(eip712Domain, bidType, bid);
+            const { reputation, complaint, eip712Domain, complaintType, owner, terminusDID } = await loadFixture(setep);
+            let bidId = makeBidId(makeBidIdOrigin(complaint));
+            let sig = await owner.signTypedData(eip712Domain, complaintType, complaint);
             
             // to be a qualified address to submit complaint, the address should own a domain
             await terminusDID.register(owner.address, {
@@ -157,46 +164,42 @@ describe("Reputation", function () {
                 allowSubdomain: true
             })
 
-            await reputation.submitComplaint(complain, sig, "reputationTestUser");
-            await expect(reputation.submitComplaint(complain, sig, "reputationTestUser"))
+            await reputation.submitComplaint(complaint, sig, "reputationTestUser");
+            await expect(reputation.submitComplaint(complaint, sig, "reputationTestUser"))
                 .to.be.revertedWithCustomError(reputation, "DuplicateBidId")
                 .withArgs(bidId);
 
         });
 
         it("sign bid with address outside terminus domain", async function () {
-            const { reputation, complain, eip712Domain, bidType, owner } = await loadFixture(setep);
-            let bidId = makeBidId(makeBidIdOrigin(complain));
-            let bid = {
-                id: bidId
-            }
-            let sig = await owner.signTypedData(eip712Domain, bidType, bid);
+            const { reputation, complaint, eip712Domain, complaintType, owner } = await loadFixture(setep);
+            let sig = await owner.signTypedData(eip712Domain, complaintType, complaint);
 
-            await expect(reputation.submitComplaint(complain, sig, "song.net"))
+            await expect(reputation.submitComplaint(complaint, sig, "song.net"))
                 .to.be.revertedWithCustomError(reputation, "InvalidSigner")
                 .withArgs(owner.address, "0x945e9704D2735b420363071bB935ACf2B9C4b814");
             
-            await expect(reputation.submitComplaint(complain, sig, "reputationTestUser"))
+            await expect(reputation.submitComplaint(complaint, sig, "reputationTestUser"))
                 .to.be.revertedWithCustomError(reputation, "DomainNoExists");
         });
     });
 });
 
-function makeBidIdOrigin(complain) {
-    return complain.agreementReachedTime.toString() + 
-        complain.srcChainId.toString() +
-        toBigInt(complain.srcAddress).toString() +
-        complain.srcToken +
-        complain.dstChainId.toString() +
-        toBigInt(complain.dstAddress).toString() +
-        complain.dstToken +
-        complain.srcAmount +
-        complain.dstAmount +
-        complain.dstNativeAmount +
-        complain.lpId +
-        complain.stepTimeLock.toString() +
-        complain.userSign +
-        complain.lpSign;
+function makeBidIdOrigin(complaint) {
+    return complaint.agreementReachedTime.toString() + 
+        complaint.srcChainId.toString() +
+        toBigInt(complaint.srcAddress).toString() +
+        complaint.srcToken +
+        complaint.dstChainId.toString() +
+        toBigInt(complaint.dstAddress).toString() +
+        complaint.dstToken +
+        complaint.srcAmount +
+        complaint.dstAmount +
+        complaint.dstNativeAmount +
+        complaint.lpId +
+        complaint.stepTimeLock.toString() +
+        complaint.userSign +
+        complaint.lpSign;
 }
 
 function makeBidId(bidIdOrigin) {

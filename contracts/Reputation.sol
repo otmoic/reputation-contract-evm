@@ -17,23 +17,6 @@ contract Reputation is SignatureHelper {
     error ComplaintTagNoExists();
     error DomainNoExists();
 
-    struct Complaint {
-        uint64 srcChainId;
-        uint256 srcAddress;
-        string srcToken;
-        uint64 dstChainId;
-        uint256 dstAddress;
-        string dstToken;
-        string srcAmount;
-        string dstAmount;
-        string dstNativeAmount;
-        string lpId;
-        uint64 stepTimeLock;
-        uint64 agreementReachedTime;
-        string userSign;
-        string lpSign;
-    }
-
     mapping(bytes32 bidId => bool exists) private submittedBidId;
 
     constructor(address _terminusDID, string memory _tagTypeDomain, string memory _tagName) {
@@ -49,13 +32,13 @@ contract Reputation is SignatureHelper {
         if (submittedBidId[id]) {
             revert DuplicateBidId(id);
         }
+        submittedBidId[id] = true;
 
         // verify complaint data and signature address
-        address signer = recoverSigner(Bid(id), _sig);
-        bool exists = terminusDID.isRegistered(_domain);
-        if (!exists) {
+        if (!terminusDID.isRegistered(_domain)) {
             revert DomainNoExists();
         }
+        address signer = recoverSigner(_complaint, _sig);
         address domainOwner = terminusDID.ownerOf(_domainTokenId(_domain));
         if (signer != domainOwner) {
             revert InvalidSigner(signer, domainOwner);
@@ -73,8 +56,6 @@ contract Reputation is SignatureHelper {
             complaints[0] = id;
             terminusDID.addTag(tagTypeDomain, tagTypeDomain, tagName, abi.encode(complaints));
         }
-    
-        submittedBidId[id] = true;
 
         emit SubmitComplaint(id);
     }
