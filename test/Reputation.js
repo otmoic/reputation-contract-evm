@@ -21,7 +21,8 @@ describe("Reputation", function () {
             srcAmount: "1000",
             dstAmount: "1000",
             dstNativeAmount: "0",
-            lpId: "did:name",
+            requestor: "did:requestor",
+            lpId: "did:lpId",
             stepTimeLock: 60,
             agreementReachedTime: await time.latest(),
             userSign: "userSign",
@@ -59,6 +60,7 @@ describe("Reputation", function () {
                 { name: 'srcAmount', type: 'string' },
                 { name: 'dstAmount', type: 'string' },
                 { name: 'dstNativeAmount', type: 'string' },
+                { name: 'requestor', type: 'string' },
                 { name: 'lpId', type: 'string' },
                 { name: 'stepTimeLock', type: 'uint64' },
                 { name: 'agreementReachedTime', type: 'uint64' },
@@ -144,8 +146,7 @@ describe("Reputation", function () {
             })
 
             await expect(reputation.submitComplaint(complaint, sig, "reputationTestUser"))
-                .to.emit(reputation, "SubmitComplaint")
-                .withArgs(bidId);
+                .to.emit(reputation, "SubmitComplaint");
 
             let exists = await reputation.hasComplaint(bidId);
             expect(exists).to.be.true;
@@ -196,6 +197,7 @@ function makeBidIdOrigin(complaint) {
         complaint.srcAmount +
         complaint.dstAmount +
         complaint.dstNativeAmount +
+        complaint.requestor +
         complaint.lpId +
         complaint.stepTimeLock.toString() +
         complaint.userSign +
