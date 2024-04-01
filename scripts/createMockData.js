@@ -62,6 +62,12 @@ async function main() {
     let sig = await wallet.signTypedData(eip712Domain, complaintType, complaint);
     let tx;
     let txComfirm;
+
+    // for (let [key, value] of Object.entries(complaint)) {
+    //     console.log(`"${key}": "${value}",`);
+    // }
+    // console.log(complaint, sig, "song.net");
+
     tx = await reputation.submitComplaint(complaint, sig, "song.net");
     txComfirm = await tx.wait();
     console.log(`complaint submitted: ${txComfirm.hash}`);
