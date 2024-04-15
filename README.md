@@ -30,3 +30,14 @@ npx hardhat verify --network op_sepolia <contract_address> <params>
 // example
 npx hardhat verify --network op_sepolia 0xEf11aAFd7b6ba47A5eBE43F8eCAAac9E441970e7 0x4c8c98e652d6a01494971a8faF5d3b68338f9ED4 otmoic.reputation complaints
 ```
+
+## Release History
+
+- [v2.0.0: implement Reputation contract](https://github.com/otmoic/reputation-contract-evm/releases/tag/v2.0.0) 
+
+
+## Contract
+
+- [Discord](https://discord.com/invite/mPcNppqcAd)
+
+- [Otomic X](https://twitter.com/otomic_org)
