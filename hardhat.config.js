@@ -25,11 +25,16 @@ module.exports = {
         op_sepolia: {
             url: "https://sepolia.optimism.io",
             accounts: [PRIV_KEY]
+        },
+        op: {
+            url: `https://optimism.llamarpc.com`,
+            accounts: [PRIV_KEY]
         }
     },
     etherscan: {
         apiKey: {
-            op_sepolia: OP_API_KEY
+            op_sepolia: OP_API_KEY,
+            optimisticEthereum: OP_API_KEY,
         },
         customChains: [
             {

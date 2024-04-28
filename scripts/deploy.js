@@ -20,13 +20,13 @@ async function main() {
         const registerTopDomain = terminusDID.interface.encodeFunctionData("register", [operatorAddr, {
             domain: topLevelDomain,
             did: "did",
-            notes: "local fork test for Reputation contract",
+            notes: "",
             allowSubdomain: true
         }]);
         const registerDomain = terminusDID.interface.encodeFunctionData("register", [operatorAddr, {
             domain: tagTypeDomain,
             did: "did",
-            notes: "local fork test for Reputation contract",
+            notes: "",
             allowSubdomain: true
         }]);
         await terminusDID.connect(operator).multicall([registerTopDomain, registerDomain]);
