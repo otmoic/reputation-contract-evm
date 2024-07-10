@@ -6,12 +6,12 @@ The reputation contract is TerminusDID Tagger, which helps Terminus Name `otmoic
 
 The complaints play an important role at Otmoic ecosystem. We have another system to provide credit points of users and lps. Once there is a complaint to the user/lp and the complaint is verified, the user/lp's point will be deducted permanently from that system.
 
-
 ## Usage
 
 This project is built based on Hardhat, including a contract file, a test script, and a deployment script. As the contract heavily relied on TerminusDID contract, the test is conducted with forked OP sepolia, where the TerminusDID contract was deployed.
 
 ### Test
+
 ```shell
 // test on op sepolia latest block fork
 npx hardhat test
@@ -33,11 +33,10 @@ npx hardhat verify --network op_sepolia 0xEf11aAFd7b6ba47A5eBE43F8eCAAac9E441970
 
 ## Release History
 
-- [v2.0.0: implement Reputation contract](https://github.com/otmoic/reputation-contract-evm/releases/tag/v2.0.0) 
-
+-   [v2.0.0: implement Reputation contract](https://github.com/otmoic/reputation-contract-evm/releases/tag/v2.0.0)
 
 ## Contract
 
-- [Discord](https://discord.com/invite/mPcNppqcAd)
+-   [Discord](https://discord.com/invite/mPcNppqcAd)
 
-- [Otomic X](https://twitter.com/otomic_org)
+-   [Otomic X](https://twitter.com/otomic_org)

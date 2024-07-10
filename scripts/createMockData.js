@@ -1,42 +1,38 @@
-const hre = require("hardhat");
-require('dotenv').config()
-
-const ethers = hre.ethers;
-
-const REPUTATION_ADDR = process.env.REPUTATION_ADDR
+const { ethers, network } = require('hardhat');
+const config = require('../hardhat.config');
 
 async function main() {
-
     const [wallet] = await ethers.getSigners();
     const userBalance = await ethers.provider.getBalance(wallet.address);
     console.log(`Load user wallet: ${wallet.address} -> native token: ${userBalance}`);
 
-    const reputation = await ethers.getContractAt("Reputation", REPUTATION_ADDR, wallet)
+    const REPUTATION_ADDR = config.addresses[network.name].reputation;
+    const reputation = await ethers.getContractAt('Reputation', REPUTATION_ADDR, wallet);
 
     const complaint = {
         srcChainId: 1,
-        srcAddress: "0x945e9704D2735b420363071bB935ACf2B9C4b814",
-        srcToken: "0xdac17f958d2ee523a2206206994597c13d831ec7",
+        srcAddress: '0x945e9704D2735b420363071bB935ACf2B9C4b814',
+        srcToken: '0xdac17f958d2ee523a2206206994597c13d831ec7',
         dstChainId: 10,
-        dstAddress: "0x945e9704D2735b420363071bB935ACf2B9C4b814",
-        dstToken: "0xdac17f958d2ee523a2206206994597c13d831ec7",
-        srcAmount: "1000",
-        dstAmount: "1000",
-        dstNativeAmount: "0",
-        requestor: "did:requestor",
-        lpId: "did:lpId",
+        dstAddress: '0x945e9704D2735b420363071bB935ACf2B9C4b814',
+        dstToken: '0xdac17f958d2ee523a2206206994597c13d831ec7',
+        srcAmount: '1000',
+        dstAmount: '1000',
+        dstNativeAmount: '0',
+        requestor: 'did:requestor',
+        lpId: 'did:lpId',
         stepTimeLock: 60,
         agreementReachedTime: Math.floor(Date.now() / 1000),
-        userSign: "userSign",
-        lpSign: "lpSign"
-    }
+        userSign: 'userSign',
+        lpSign: 'lpSign',
+    };
 
-    const network = await ethers.provider.getNetwork();
+    const chaind = await ethers.provider.getNetwork();
     const eip712Domain = {
         name: 'Otmoic Reputation',
         version: '1',
-        chainId: network.chainId,
-        verifyingContract: REPUTATION_ADDR
+        chainId: chaind.chainId,
+        verifyingContract: REPUTATION_ADDR,
     };
 
     const complaintType = {
@@ -56,8 +52,8 @@ async function main() {
             { name: 'agreementReachedTime', type: 'uint64' },
             { name: 'userSign', type: 'string' },
             { name: 'lpSign', type: 'string' },
-        ]
-    }
+        ],
+    };
 
     let sig = await wallet.signTypedData(eip712Domain, complaintType, complaint);
     let tx;
@@ -68,10 +64,9 @@ async function main() {
     // }
     // console.log(complaint, sig, "song.net");
 
-    tx = await reputation.submitComplaint(complaint, sig, "song.net");
+    tx = await reputation.submitComplaint(complaint, sig, 'otmoic.reputation');
     txComfirm = await tx.wait();
     console.log(`complaint submitted: ${txComfirm.hash}`);
-
 }
 
 // We recommend this pattern to be able to use async/await everywhere

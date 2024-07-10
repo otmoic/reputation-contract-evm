@@ -11,20 +11,14 @@ interface ITerminusDID {
 
     function ownerOf(uint256 tokenId) external view returns (address);
 
-    function hasTag(
-        string calldata from,
-        string calldata to,
-        string calldata name
-    ) external view returns (bool);
+    function hasTag(string calldata from, string calldata to, string calldata name) external view returns (bool);
 
     function isRegistered(string calldata domain) external view returns (bool);
 
-    function getTagElem(
-        string calldata from,
-        string calldata to,
-        string calldata name,
-        uint256[] calldata elemPath
-    ) external view returns (bytes memory);
+    function getTagElem(string calldata from, string calldata to, string calldata name, uint256[] calldata elemPath)
+        external
+        view
+        returns (bytes memory);
 
     function defineTag(
         string calldata domain,
@@ -33,12 +27,7 @@ interface ITerminusDID {
         string[][] calldata fieldNames
     ) external;
 
-    function addTag(
-        string calldata from,
-        string calldata to,
-        string calldata name,
-        bytes calldata value
-    ) external;
+    function addTag(string calldata from, string calldata to, string calldata name, bytes calldata value) external;
 
     function pushTagElem(
         string calldata from,
@@ -48,18 +37,11 @@ interface ITerminusDID {
         bytes calldata value
     ) external;
 
-    function multicall(
-        bytes[] calldata data
-    ) external returns (bytes[] memory results);
+    function multicall(bytes[] calldata data) external returns (bytes[] memory results);
 
-    function register(
-        address tokenOwner,
-        Metadata calldata metadata
-    ) external returns (uint256 tokenId);
+    function register(address tokenOwner, Metadata calldata metadata) external returns (uint256 tokenId);
 
-    function setTagger(
-        string calldata domain,
-        string calldata name,
-        address tagger
-    ) external;
+    function setTagger(string calldata domain, string calldata name, address tagger) external;
+
+    function getDefinedTagNames(string calldata domain) external view returns (string[] memory);
 }

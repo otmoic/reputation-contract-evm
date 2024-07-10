@@ -1,16 +1,18 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.24;
 
+import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
+import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import {Ownable2StepUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 import {ITerminusDID} from "./ITerminusDID.sol";
 import {SignatureHelper} from "./SignatureHelper.sol";
-import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 
-contract Reputation is SignatureHelper {
+contract Reputation is SignatureHelper, UUPSUpgradeable, Ownable2StepUpgradeable {
     ITerminusDID public terminusDID;
     string public tagTypeDomain;
     string public tagName;
 
-    event SubmitComplaint(bytes32 bidId, Complaint complaint);
+    event SubmitComplaint(bytes32 bidId, Complaint complaint, string complainant);
 
     error DuplicateBidId(bytes32 bidId);
     error InvalidSigner(address signer, address owner);
@@ -19,21 +21,24 @@ contract Reputation is SignatureHelper {
 
     mapping(bytes32 bidId => bool exists) private submittedBidId;
 
-    constructor(
-        address _terminusDID,
-        string memory _tagTypeDomain,
-        string memory _tagName
-    ) {
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    function initialize(address _terminusDID, string memory _tagTypeDomain, string memory _tagName)
+        external
+        initializer
+    {
         terminusDID = ITerminusDID(_terminusDID);
         tagTypeDomain = _tagTypeDomain;
         tagName = _tagName;
+
+        __signatureHelper_init_init_unchained();
+        __Ownable_init_unchained(_msgSender());
     }
 
-    function submitComplaint(
-        Complaint calldata _complaint,
-        bytes calldata _sig,
-        string calldata _domain
-    ) external {
+    function submitComplaint(Complaint calldata _complaint, bytes calldata _sig, string calldata _domain) external {
         bytes32 id = getBidId(_complaint);
 
         // check bid id has submitted or not
@@ -57,35 +62,22 @@ contract Reputation is SignatureHelper {
         if (hasTag) {
             // push to array
             uint256[] memory elemPath;
-            terminusDID.pushTagElem(
-                tagTypeDomain,
-                tagTypeDomain,
-                tagName,
-                elemPath,
-                abi.encode(id)
-            );
+            terminusDID.pushTagElem(tagTypeDomain, tagTypeDomain, tagName, elemPath, abi.encode(id));
         } else {
             // add array
             bytes32[] memory complaints = new bytes32[](1);
             complaints[0] = id;
-            terminusDID.addTag(
-                tagTypeDomain,
-                tagTypeDomain,
-                tagName,
-                abi.encode(complaints)
-            );
+            terminusDID.addTag(tagTypeDomain, tagTypeDomain, tagName, abi.encode(complaints));
         }
 
-        emit SubmitComplaint(id, _complaint);
+        emit SubmitComplaint(id, _complaint, _domain);
     }
 
     function hasComplaint(bytes32 _bidId) external view returns (bool) {
         return submittedBidId[_bidId];
     }
 
-    function getBidId(
-        Complaint calldata _complaint
-    ) public pure returns (bytes32) {
+    function getBidId(Complaint calldata _complaint) public pure returns (bytes32) {
         string memory tmp = Strings.toString(_complaint.agreementReachedTime);
         tmp = string.concat(
             tmp,
@@ -96,12 +88,7 @@ contract Reputation is SignatureHelper {
             Strings.toString(_complaint.dstAddress),
             _complaint.dstToken
         );
-        tmp = string.concat(
-            tmp,
-            _complaint.srcAmount,
-            _complaint.dstAmount,
-            _complaint.dstNativeAmount
-        );
+        tmp = string.concat(tmp, _complaint.srcAmount, _complaint.dstAmount, _complaint.dstNativeAmount);
         tmp = string.concat(
             tmp,
             _complaint.requestor,
@@ -113,9 +100,9 @@ contract Reputation is SignatureHelper {
         return keccak256(bytes(tmp));
     }
 
-    function _domainTokenId(
-        string calldata _domain
-    ) internal pure returns (uint256) {
+    function _domainTokenId(string calldata _domain) internal pure returns (uint256) {
         return uint256(keccak256(bytes(_domain)));
     }
+
+    function _authorizeUpgrade(address newImplementation) internal view override onlyOwner {}
 }
