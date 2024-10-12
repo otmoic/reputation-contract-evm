@@ -33,9 +33,13 @@ npx hardhat verify --network op_sepolia 0xEf11aAFd7b6ba47A5eBE43F8eCAAac9E441970
 
 ## Release History
 
+-   [v2.0.0: remove stepTimeLock, add expectedSingleStepTime, tolerantSingleStepTime and earliestRefundTime](https://github.com/otmoic/reputation-contract-evm/releases/tag/v2.2.0)
+
+-   [v2.1.0: upgradeable and add complainant](https://github.com/otmoic/reputation-contract-evm/releases/tag/v2.1.0)
+
 -   [v2.0.0: implement Reputation contract](https://github.com/otmoic/reputation-contract-evm/releases/tag/v2.0.0)
 
-## Contract
+## Contact
 
 -   [Discord](https://discord.com/invite/mPcNppqcAd)
 
