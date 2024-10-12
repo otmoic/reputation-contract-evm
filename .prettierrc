@@ -1,8 +1,8 @@
 {
-    "singleQuote": true,
-    "tabWidth": 4,
-    "semi": true,
-    "trailingComma": "all",
+    "plugins": ["prettier-plugin-solidity"],
     "printWidth": 120,
-    "useTabs": false
+    "tabWidth": 4,
+    "useTabs": false,
+    "singleQuote": false,
+    "bracketSpacing": true
 }

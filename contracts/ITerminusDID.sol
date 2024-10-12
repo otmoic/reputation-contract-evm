@@ -15,10 +15,12 @@ interface ITerminusDID {
 
     function isRegistered(string calldata domain) external view returns (bool);
 
-    function getTagElem(string calldata from, string calldata to, string calldata name, uint256[] calldata elemPath)
-        external
-        view
-        returns (bytes memory);
+    function getTagElem(
+        string calldata from,
+        string calldata to,
+        string calldata name,
+        uint256[] calldata elemPath
+    ) external view returns (bytes memory);
 
     function defineTag(
         string calldata domain,

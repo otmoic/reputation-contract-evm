@@ -1,13 +1,13 @@
-const { ethers, network, upgrades } = require('hardhat');
-const config = require('../hardhat.config');
+const { ethers, network, upgrades } = require("hardhat");
+const config = require("../hardhat.config");
 
 async function main() {
-    const tagTypeDomain = 'otmoic.reputation';
-    const tagName = 'complaints';
+    const tagTypeDomain = "otmoic.reputation";
+    const tagName = "complaints";
     const [operator] = await ethers.getSigners();
 
     const TERMINUSDID_ADDR = config.addresses[network.name].terminusDIDProxy;
-    const terminusDID = await ethers.getContractAt('ITerminusDID', TERMINUSDID_ADDR, operator);
+    const terminusDID = await ethers.getContractAt("ITerminusDID", TERMINUSDID_ADDR, operator);
 
     const hasDomain = await terminusDID.isRegistered(tagTypeDomain);
     if (!hasDomain) {
@@ -22,10 +22,10 @@ async function main() {
     }
 
     // deploy reputation contract
-    const Reputation = await ethers.getContractFactory('Reputation');
+    const Reputation = await ethers.getContractFactory("Reputation");
     const reputation = await upgrades.deployProxy(Reputation, [TERMINUSDID_ADDR, tagTypeDomain, tagName], {
-        initializer: 'initialize',
-        kind: 'uups',
+        initializer: "initialize",
+        kind: "uups",
         constructorArgs: [],
     });
 
