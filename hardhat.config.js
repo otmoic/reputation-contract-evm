@@ -55,5 +55,10 @@ module.exports = {
             terminusDIDOperator: "0x71D9E0ec99aF672dA13d2D181f984dEAa1E245F1",
             reputation: "0xE924F7f68D1dcd004720e107F62c6303aF271ed3",
         },
+        op_sepolia: {
+            terminusDIDProxy: "0xe2D7c3a9013960E04d4E9F5F9B63fff37eEd97A8",
+            terminusDIDOperator: "0x14935Ca99Fa44c1773c76Ca67701e30d69d242c2",
+            reputation: "0xd9d91A805e074932E3E6FeD399A814207106A69E",
+        }
     },
 };
